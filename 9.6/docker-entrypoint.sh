@@ -88,7 +88,10 @@ if [ "$1" = 'postgres' ]; then
 
 		{ echo; echo "host all all all $authMethod"; } | tee -a "$PGDATA/pg_hba.conf" > /dev/null
 
-		# internal start of server in order to allow set-up using psql-client		
+        # rewrite port in config
+        sed -i 's/\#port = 5432/port = 5433/g' $PGDATA/postgresql.conf
+
+		# internal start of server in order to allow set-up using psql-client
 		# does not listen on external TCP/IP and waits until start finishes
 		PGUSER="${PGUSER:-postgres}" \
 		pg_ctl -D "$PGDATA" \
@@ -98,7 +101,7 @@ if [ "$1" = 'postgres' ]; then
 		file_env 'POSTGRES_USER' 'postgres'
 		file_env 'POSTGRES_DB' "$POSTGRES_USER"
 
-		psql=( psql -v ON_ERROR_STOP=1 )
+		psql=( psql -p 5433 -v ON_ERROR_STOP=1 )
 
 		if [ "$POSTGRES_DB" != 'postgres' ]; then
 			"${psql[@]}" --username postgres <<-EOSQL
